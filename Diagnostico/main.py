@@ -1,21 +1,23 @@
 from openpyxl import load_workbook
 
-
 def read_data_from_excel(file_path):
-    set_provincias = set()
+    set_datos = set()
 
     wb = load_workbook(filename=file_path)
     sheet = wb.active
 
-    for row in sheet.iter_rows(min_row=2, values_only=True):
+    for row in sheet.iter_rows(min_row=4, values_only=True):
+        nombre = row[0]
+        municipio = row[5]
+        departamento = row[6]
         provincia = row[7]
-        set_provincias.add(provincia)
+        set_datos.add((nombre, municipio, departamento, provincia))
     
-    return set_provincias
+    return set_datos
 
 # Ejemplo de uso
 if __name__ == "__main__":
     file_path = "Localidades.xlsx"
-    provincias = read_data_from_excel(file_path)
-    for provincia in provincias:
-        print(f" Nombre: {provincia}")
+    datos = read_data_from_excel(file_path)
+    for nombre, municipio , departamento, provincia in datos:
+        print(f"Ciudad : {nombre}, Municipio : {municipio}, Departamento: {departamento}, Provincia: {provincia}")

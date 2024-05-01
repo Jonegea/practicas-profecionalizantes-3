@@ -28,6 +28,7 @@ const server = http.createServer((req, res) => {
         res.writeHead(500, { 'Content-Type': 'application/json' });
         res.end(JSON.stringify({ error: 'Error interno del servidor' }));
       } else {
+        console.log(results);
         res.writeHead(200, { 'Content-Type': 'application/json' });
         res.end(JSON.stringify(results));
       }

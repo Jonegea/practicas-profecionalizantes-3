@@ -1,0 +1,41 @@
+/* Estilos para la tabla */
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 20px;
+  }
+  
+  th, td {
+    padding: 8px;
+    text-align: left;
+    border-bottom: 1px solid #ddd;
+  }
+  
+  /* Estilo para la cabecera de la tabla */
+  th {
+    background-color: #f2f2f2;
+  }
+  
+  /* Estilo para filas alternas */
+  tr:nth-child(even) {
+    background-color: #f9f9f9;
+  }
+  
+  /* Estilo para los botones en la lista */
+  .menu li {
+    display: inline-block;
+    margin-right: 10px;
+  }
+  
+  .menu button {
+    padding: 8px 12px;
+    background-color: #007bff;
+    color: #fff;
+    border: none;
+    cursor: pointer;
+  }
+  
+  .menu button:hover {
+    background-color: #0056b3;
+  }
+  

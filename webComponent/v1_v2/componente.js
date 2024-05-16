@@ -60,33 +60,17 @@ class CustomSelector extends HTMLElement {
 
     async fillTable() {
         this._cuerpoTabla.innerHTML = '';
-
-        try {
-            const response = await fetch("http://localhost:3000/usuario");
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-
-            const dataCuentas = await response.json();
-            console.log(dataCuentas);
-
-            if (!dataCuentas || !Array.isArray(dataCuentas.cuentas)) {
-                throw new Error('Invalid data format');
-            }
-
-            this.cuentas = dataCuentas.cuentas;
-
-            for (const cuenta of this.cuentas) {
-                const row = document.createElement('tr');
-                row.innerHTML = `
-                    <td>${cuenta.id}</td>
-                    <td>${cuenta.username}</td>
-                    <td>${cuenta.saldo}</td>
-                `;
-                this._cuerpoTabla.appendChild(row);
-            }
-        } catch (error) {
-            console.error('Error fetching data:', error);
+        let dataCuentas = await this._data;
+        console.log(this._data);
+        this.cuentas = dataCuentas.cuentas; // Actualizar this.cuentas con los datos cargados
+        for (const cuenta of this.cuentas) {
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td>${cuenta.id}</td>
+                <td>${cuenta.username}</td>
+                <td>${cuenta.saldo}</td>
+            `;
+            this._cuerpoTabla.appendChild(row);
         }
     }
 

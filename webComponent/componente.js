@@ -3,7 +3,7 @@ console.log('Introducción a WebComponents');
 class CustomSelector extends HTMLElement {
     constructor() {
         super();
-
+        this._data = {};
         this._title = document.createElement('h2');
         this._title.innerText = 'Gestión de Cuentas';
 
@@ -31,12 +31,13 @@ class CustomSelector extends HTMLElement {
             </thead>
             <tbody id="cuerpo-tabla"></tbody>
         `;
-        const buttonContainer = document.createElement("menu");
+
+        const buttonContainer = document.createElement('menu');
         buttonContainer.classList.add('button-container');
-        const liList = document.createElement("li");
-        const liCreate = document.createElement("li");
-        const liEdit = document.createElement("li");
-        const liDelete = document.createElement("li");
+        const liList = document.createElement('li');
+        const liCreate = document.createElement('li');
+        const liEdit = document.createElement('li');
+        const liDelete = document.createElement('li');
 
         liList.appendChild(this._listButton);
         liCreate.appendChild(this._createButton);
@@ -49,15 +50,20 @@ class CustomSelector extends HTMLElement {
         buttonContainer.appendChild(liDelete);
 
         this.appendChild(buttonContainer);
-                this.appendChild(this._table);
-                this.cuentas = [];
-                this._cuerpoTabla = this.querySelector('#cuerpo-tabla');
-            }
+        this.appendChild(this._table);
+
+        this.cuentas = [];
+        this._cuerpoTabla = this.querySelector('#cuerpo-tabla');
+
+    }
+    connectedCallback() {this.#DataLoading()}
 
     async fillTable() {
         this._cuerpoTabla.innerHTML = '';
-        let dataCuentas = await this.#DataLoading();
-        for (const cuenta of dataCuentas["cuentas"]) {
+        let dataCuentas = await this._data;
+        console.log(this._data);
+        this.cuentas = dataCuentas.cuentas; // Actualizar this.cuentas con los datos cargados
+        for (const cuenta of this.cuentas) {
             const row = document.createElement('tr');
             row.innerHTML = `
                 <td>${cuenta.id}</td>
@@ -68,42 +74,46 @@ class CustomSelector extends HTMLElement {
         }
     }
 
-     listar() {
-        
+    listar() {
         this.fillTable();
     }
 
-    async #DataLoading(){//metodo privado
-    
-        let result = undefined;
-       
-            result = await fetch("./cuentas.json");
-            const parseResult = await result.json()
-            return {...parseResult};
-       
-    
-    };// asincronica para leer y mostrar json
+    async #DataLoading() { // Método privado
+        let result = await fetch("./cuentas.json");
+        this._data = await result.json();
+       // return await result.json();
+        
+    }
 
     crear() {
-        const id = prompt('Ingrese el ID:');
+        const id = parseInt(prompt('Ingrese el ID:'));
         const username = prompt('Ingrese el Username:');
-        const saldo = prompt('Ingrese el Saldo:');
+        const saldo = parseFloat(prompt('Ingrese el Saldo:'));
 
-        const nuevaCuenta = { id: parseInt(id), username, saldo };
-        console.log('Nueva cuenta creada:', nuevaCuenta);
+        if (!id || !username || isNaN(saldo)) {
+            alert('Datos inválidos. Por favor, intente de nuevo.');
+            return;
+        }
+
+        const nuevaCuenta = { id, username, saldo };
         this.cuentas.push(nuevaCuenta);
 
+        console.log('Nueva cuenta creada:', nuevaCuenta);
         this.fillTable(); // Actualizar tabla después de crear cuenta
     }
 
     editar() {
+        const id = parseInt(prompt('Ingrese el ID de la cuenta a editar:'));
+        const cuentaExistente = this.cuentas.find(cuenta => cuenta.id === id);
 
-         const id = prompt('Ingrese el ID de la cuenta a editar:');
-        const cuentaExistente = this.cuentas.find(cuenta => cuenta.id === parseInt(id));
-       // const cuentaExistente = cuentas.find(cuenta => cuenta.id === parseInt(id));
         if (cuentaExistente) {
             const nuevoUsername = prompt('Ingrese el nuevo Username:', cuentaExistente.username);
-            const nuevoSaldo = prompt('Ingrese el nuevo Saldo:', cuentaExistente.saldo);
+            const nuevoSaldo = parseFloat(prompt('Ingrese el nuevo Saldo:', cuentaExistente.saldo));
+
+            if (!nuevoUsername || isNaN(nuevoSaldo)) {
+                alert('Datos inválidos. Por favor, intente de nuevo.');
+                return;
+            }
 
             console.log('Cuenta anterior:', cuentaExistente);
             cuentaExistente.username = nuevoUsername;
@@ -112,13 +122,14 @@ class CustomSelector extends HTMLElement {
 
             this.fillTable(); // Actualizar tabla después de editar cuenta
         } else {
+            alert('No se encontró ninguna cuenta con ese ID.');
             console.log('No se encontró ninguna cuenta con ese ID.');
         }
     }
 
     eliminar() {
-        const id = prompt('Ingrese el ID de la cuenta a eliminar:');
-        const index = this.cuentas.findIndex(cuenta => cuenta.id === parseInt(id));
+        const id = parseInt(prompt('Ingrese el ID de la cuenta a eliminar:'));
+        const index = this.cuentas.findIndex(cuenta => cuenta.id === id);
 
         if (index !== -1) {
             const cuentaEliminada = this.cuentas.splice(index, 1)[0];
@@ -126,10 +137,10 @@ class CustomSelector extends HTMLElement {
 
             this.fillTable(); // Actualizar tabla después de eliminar cuenta
         } else {
+            alert('No se encontró ninguna cuenta con ese ID.');
             console.log('No se encontró ninguna cuenta con ese ID.');
         }
     }
 }
 
 customElements.define('x-custom-selector', CustomSelector);
-

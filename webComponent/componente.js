@@ -54,9 +54,11 @@ class CustomSelector extends HTMLElement {
 
         this.cuentas = [];
         this._cuerpoTabla = this.querySelector('#cuerpo-tabla');
-
     }
-    connectedCallback() {this.#DataLoading()}
+
+    connectedCallback() {
+        this.listar();
+    }
 
     async fillTable() {
         this._cuerpoTabla.innerHTML = '';
@@ -70,11 +72,11 @@ class CustomSelector extends HTMLElement {
             const dataCuentas = await response.json();
             console.log(dataCuentas);
 
-            if (!dataCuentas || !Array.isArray(dataCuentas.cuentas)) {
+            if (!Array.isArray(dataCuentas)) {
                 throw new Error('Invalid data format');
             }
 
-            this.cuentas = dataCuentas.cuentas;
+            this.cuentas = dataCuentas;
 
             for (const cuenta of this.cuentas) {
                 const row = document.createElement('tr');
@@ -94,31 +96,41 @@ class CustomSelector extends HTMLElement {
         this.fillTable();
     }
 
-    async #DataLoading() { // Método privado
-        let result = await fetch("./cuentas.json");
-        this._data = await result.json();
-       // return await result.json();
-        
-    }
-
-    crear() {
-        const id = parseInt(prompt('Ingrese el ID:'));
+    async crear() {
+        const ID =prompt ('ingrese id');
         const username = prompt('Ingrese el Username:');
         const saldo = parseFloat(prompt('Ingrese el Saldo:'));
 
-        if (!id || !username || isNaN(saldo)) {
+        if (!username || isNaN(saldo)) {
             alert('Datos inválidos. Por favor, intente de nuevo.');
             return;
         }
 
-        const nuevaCuenta = { id, username, saldo };
-        this.cuentas.push(nuevaCuenta);
+        const nuevaCuenta = { username, saldo };
 
-        console.log('Nueva cuenta creada:', nuevaCuenta);
-        this.fillTable(); // Actualizar tabla después de crear cuenta
+        try {
+            const response = await fetch("http://localhost:3000/usuario", {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(nuevaCuenta)
+            });
+
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+
+            const result = await response.json();
+            console.log('Nueva cuenta creada:', result);
+
+            this.listar(); // Actualizar tabla después de crear cuenta
+        } catch (error) {
+            console.error('Error creando cuenta:', error);
+        }
     }
 
-    editar() {
+    async editar() {
         const id = parseInt(prompt('Ingrese el ID de la cuenta a editar:'));
         const cuentaExistente = this.cuentas.find(cuenta => cuenta.id === id);
 
@@ -131,30 +143,56 @@ class CustomSelector extends HTMLElement {
                 return;
             }
 
-            console.log('Cuenta anterior:', cuentaExistente);
-            cuentaExistente.username = nuevoUsername;
-            cuentaExistente.saldo = nuevoSaldo;
-            console.log('Cuenta actualizada:', cuentaExistente);
+            const datosActualizados = { username: nuevoUsername, saldo: nuevoSaldo };
 
-            this.fillTable(); // Actualizar tabla después de editar cuenta
+            try {
+                const response = await fetch(`http://localhost:3000/usuario/${id}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(datosActualizados)
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                console.log('Cuenta actualizada:', await response.json());
+                this.listar(); // Actualizar tabla después de editar cuenta
+            } catch (error) {
+                console.error('Error actualizando cuenta:', error);
+            }
         } else {
             alert('No se encontró ninguna cuenta con ese ID.');
             console.log('No se encontró ninguna cuenta con ese ID.');
         }
     }
 
-    eliminar() {
+    async eliminar() {
         const id = parseInt(prompt('Ingrese el ID de la cuenta a eliminar:'));
-        const index = this.cuentas.findIndex(cuenta => cuenta.id === id);
 
-        if (index !== -1) {
-            const cuentaEliminada = this.cuentas.splice(index, 1)[0];
-            console.log('Cuenta eliminada:', cuentaEliminada);
+        if (typeof id !== "number") {
 
-            this.fillTable(); // Actualizar tabla después de eliminar cuenta
-        } else {
-            alert('No se encontró ninguna cuenta con ese ID.');
-            console.log('No se encontró ninguna cuenta con ese ID.');
+            alert('ID inválido. Por favor, intente de nuevo.');
+            return;
+        }
+
+        try {
+            const response = await fetch(`http://localhost:3000/usuario?id=${id}`, {
+                method: 'DELETE'
+            });
+
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+
+            const result = await response.json();
+            console.log('Cuenta eliminada:', result);
+
+            this.listar(); // Actualizar tabla después de eliminar cuenta
+        } catch (error) {
+            console.error('Error eliminando cuenta:', error);
         }
     }
 }

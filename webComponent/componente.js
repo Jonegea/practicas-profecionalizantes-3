@@ -133,31 +133,31 @@ class CustomSelector extends HTMLElement {
     async editar() {
         const id = parseInt(prompt('Ingrese el ID de la cuenta a editar:'));
         const cuentaExistente = this.cuentas.find(cuenta => cuenta.id === id);
-
+    
         if (cuentaExistente) {
             const nuevoUsername = prompt('Ingrese el nuevo Username:', cuentaExistente.username);
             const nuevoSaldo = parseFloat(prompt('Ingrese el nuevo Saldo:', cuentaExistente.saldo));
-
+    
             if (!nuevoUsername || isNaN(nuevoSaldo)) {
                 alert('Datos inválidos. Por favor, intente de nuevo.');
                 return;
             }
-
+    
             const datosActualizados = { username: nuevoUsername, saldo: nuevoSaldo };
-
+    
             try {
-                const response = await fetch(`http://localhost:3000/usuario/${id}`, {
+                const response = await fetch(`http://localhost:3000/usuario?id=${id}`, {  // Ajuste aquí
                     method: 'PUT',
                     headers: {
                         'Content-Type': 'application/json'
                     },
                     body: JSON.stringify(datosActualizados)
                 });
-
+    
                 if (!response.ok) {
                     throw new Error(`HTTP error! status: ${response.status}`);
                 }
-
+    
                 console.log('Cuenta actualizada:', await response.json());
                 this.listar(); // Actualizar tabla después de editar cuenta
             } catch (error) {
@@ -168,7 +168,7 @@ class CustomSelector extends HTMLElement {
             console.log('No se encontró ninguna cuenta con ese ID.');
         }
     }
-
+    
     async eliminar() {
         const id = parseInt(prompt('Ingrese el ID de la cuenta a eliminar:'));
 

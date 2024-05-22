@@ -6,12 +6,10 @@ const fs = require('fs');
 const PORT = process.env.PORT || 3000;
 
 const server = http.createServer((req, res) => {
-    // Configurar encabezados CORS
     res.setHeader('Access-Control-Allow-Origin', '*');
     res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
     res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
 
-    // Manejar las solicitudes preflight
     if (req.method === 'OPTIONS') {
         res.writeHead(204);
         res.end();
@@ -19,10 +17,8 @@ const server = http.createServer((req, res) => {
     }
 
     const reqUrl = url.parse(req.url, true);
-    let responded = false;
 
     if (reqUrl.pathname === '/usuario' && req.method === 'GET') {
-        // Consultar todas las cuentas
         db.query('SELECT * FROM acount', (err, results) => {
             if (err) {
                 console.error('Error al obtener las cuentas:', err);
@@ -34,7 +30,6 @@ const server = http.createServer((req, res) => {
             }
         });
     } else if (reqUrl.pathname === '/usuario' && req.method === 'DELETE') {
-        console.log("entro al metodo");
         const id = reqUrl.query.id;
 
         if (!id) {
@@ -43,9 +38,7 @@ const server = http.createServer((req, res) => {
             return;
         }
 
-        // Eliminar la cuenta con el ID especificado
         db.query('DELETE FROM acount WHERE id = ?', [id], (err, results) => {
-
             if (err) {
                 console.error('Error al eliminar la cuenta:', err);
                 res.writeHead(500, { 'Content-Type': 'application/json' });
@@ -61,19 +54,15 @@ const server = http.createServer((req, res) => {
     } else if (reqUrl.pathname === '/usuario' && req.method === 'POST') {
         let body = '';
 
-        // Escuchar el evento 'data' para acumular los datos del cuerpo de la solicitud
         req.on('data', chunk => {
             body += chunk.toString();
         });
 
-        // Escuchar el evento 'end' para procesar el cuerpo de la solicitud una vez que todos los datos se hayan recibido
         req.on('end', () => {
             try {
                 const data = JSON.parse(body);
-
-                // Aquí puedes manejar los datos del cuerpo (data)
-                // Por ejemplo, insertar una nueva cuenta en la base de datos
                 const { username, saldo } = data;
+
                 db.query('INSERT INTO acount (username, saldo) VALUES (?, ?)', [username, saldo], (err, results) => {
                     if (err) {
                         console.error('Error al insertar la cuenta:', err);
@@ -89,9 +78,39 @@ const server = http.createServer((req, res) => {
                 res.end(JSON.stringify({ error: 'Datos inválidos en el cuerpo de la solicitud' }));
             }
         });
-        
-    }else if (reqUrl.pathname === '/cargar-usuarios' && req.method === 'GET') {
-        // Leer el archivo JSON y cargar usuarios
+
+    } else if (reqUrl.pathname === '/usuario' && req.method === 'PUT') {
+        const id = reqUrl.query.id;
+        let body = '';
+
+        req.on('data', chunk => {
+            body += chunk.toString();
+        });
+        console.log("entro a editar");
+        req.on('end', () => {
+            try {
+                const data = JSON.parse(body);
+                const { username, saldo } = data;
+
+                db.query('UPDATE acount SET username = ?, saldo = ? WHERE id = ?', [username, saldo, id], (err, results) => {
+                    if (err) {
+                        console.error('Error al actualizar la cuenta:', err);
+                        res.writeHead(500, { 'Content-Type': 'application/json' });
+                        res.end(JSON.stringify({ error: 'Error interno del servidor' }));
+                    } else if (results.affectedRows === 0) {
+                        res.writeHead(404, { 'Content-Type': 'application/json' });
+                        res.end(JSON.stringify({ error: 'Cuenta no encontrada' }));
+                    } else {
+                        res.writeHead(200, { 'Content-Type': 'application/json' });
+                        res.end(JSON.stringify({ message: 'Cuenta actualizada correctamente' }));
+                    }
+                });
+            } catch (error) {
+                res.writeHead(400, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify({ error: 'Datos inválidos en el cuerpo de la solicitud' }));
+            }
+        });
+    } else if (reqUrl.pathname === '/cargar-usuarios' && req.method === 'GET') {
         fs.readFile('./cuentas.json', 'utf8', (err, data) => {
             if (err) {
                 console.error('Error al leer el archivo JSON:', err);
@@ -101,20 +120,17 @@ const server = http.createServer((req, res) => {
                 try {
                     const cuentas = JSON.parse(data).cuentas;
 
-                    // Iterar sobre cada cuenta y ejecutar una consulta de inserción para cada una
                     cuentas.forEach(cuenta => {
-                        db.query('INSERT INTO acount (username, saldo) VALUES (?, ?)', [cuenta.username, cuenta.saldo], (err, results) => {
+                        const saldo = parseFloat(cuenta.saldo.replace('$', ''));
+                        db.query('INSERT INTO acount (username, saldo) VALUES (?, ?)', [cuenta.username, saldo], (err, results) => {
                             if (err) {
                                 console.error('Error al insertar la cuenta:', err);
-                                // Puedes manejar el error aquí si es necesario
                             } else {
                                 console.log('Cuenta insertada correctamente:', results.insertId);
-                                // Puedes enviar una respuesta al cliente aquí si lo deseas
                             }
                         });
                     });
 
-                    // Una vez que todas las cuentas se han insertado, enviar una respuesta al cliente
                     res.writeHead(200, { 'Content-Type': 'application/json' });
                     res.end(JSON.stringify({ message: 'Usuarios cargados correctamente' }));
                 } catch (error) {

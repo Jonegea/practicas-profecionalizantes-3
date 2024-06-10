@@ -85,6 +85,45 @@ class WCView extends HTMLElement// es un lemento del DOM
         this.appendChild(this._sieteButton);
         this.appendChild(this._ochoButton);
         this.appendChild(this._nueveButton);
+
+        const style = document.createElement('style');
+        style.textContent = `
+            .numberButton {
+                background-color: blue;
+                color: #FFFFFF;
+                border-color: #FFFFFF;
+                border-radius: 6px;
+                width: 100%;
+            }
+
+            .operatorButton {
+                background-color: #00FF04;
+                color: #FFFFFF;
+                border-color: #FFFFFF;
+                border-radius: 6px;
+                width: 100%;
+            }
+
+            .clearButton {
+                background-color: #FF0000;
+                color: #FFFFFF;
+                border-color: #FFFFFF;
+                width: 100%;
+                border-radius: 6px;
+            }
+
+            .calculateButton {
+                background-color: #FFB900;
+                color: #FFFFFF;
+                border-color: #FFFFFF;
+                width: 100%;
+                border-radius: 6px;
+            }
+
+            .displayResult {
+                border-radius: 6px;
+            }
+        `;
         
 	}
     initCallbacks(){
